@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>מסדר הגלריה</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--aqua:#77cebf;--blue:#7c9cf0;--indigo:#284ea6;--ink:#eaf1f8;--mute:#8fa3bf;--red:#ff5a7a}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#060b17;color:var(--ink);font-family:Heebo,system-ui,sans-serif}
+/* משטח Brain: פריזמה 74°, נשימת אקווה, משקל אינדיגו, גריד 90 */
+.ground{position:fixed;inset:0;background:linear-gradient(180deg,#060b17 0%,#091123 56%,#0c162e 100%)}
+.rays{position:fixed;inset:0;background-image:repeating-linear-gradient(74deg,rgba(234,241,248,.075) 0 1.5px,transparent 1.5px 30px);
+  -webkit-mask-image:linear-gradient(74deg,#000 0%,rgba(0,0,0,.4) 24%,rgba(0,0,0,.1) 42%,transparent 58%);mask-image:linear-gradient(74deg,#000 0%,rgba(0,0,0,.4) 24%,rgba(0,0,0,.1) 42%,transparent 58%)}
+.weight{position:fixed;inset:0;background:linear-gradient(35deg,rgba(40,78,166,.30) 0%,transparent 42%)}
+.breath{position:fixed;inset:0;background:linear-gradient(215deg,rgba(119,206,191,.15) 0%,rgba(119,206,191,.04) 26%,transparent 46%)}
+.grid{position:fixed;inset:0;background-image:linear-gradient(rgba(234,241,248,.032) 1px,transparent 1px),linear-gradient(90deg,rgba(234,241,248,.032) 1px,transparent 1px);background-size:90px 90px}
+canvas{position:fixed;inset:0;z-index:3}
+.vig{position:fixed;inset:0;z-index:4;pointer-events:none;will-change:opacity;
+  background:radial-gradient(ellipse 62% 62% at 50% 50%,rgba(6,11,23,.9) 0%,rgba(6,11,23,.72) 50%,rgba(6,11,23,.35) 100%)}
+
+header{position:fixed;top:0;right:0;left:0;height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 2.2vw;z-index:6;opacity:0}
+.title{font-weight:900;font-size:clamp(26px,2.9vw,64px);letter-spacing:-.01em;line-height:1}
+.g{background:linear-gradient(270deg,var(--aqua),var(--blue) 70%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-weight:400;color:var(--mute);font-size:clamp(13px,1vw,21px);margin-top:.5em}
+.logo{height:clamp(26px,2.6vw,52px)}
+.stats{display:flex;gap:clamp(14px,2.6vw,56px)}
+.stat{text-align:center;min-width:5.4em}
+.stat b{display:block;font-weight:900;font-size:clamp(22px,2.5vw,52px);font-variant-numeric:tabular-nums;line-height:1}
+.stat span{font-size:clamp(11px,.85vw,17px);color:var(--mute);font-weight:400}
+.stat.red b{color:var(--red)}
+
+.card{position:fixed;z-index:2;will-change:opacity,transform;border-radius:16px;background:rgba(13,22,44,.82);contain:layout paint;border:1px solid rgba(143,163,191,.15);opacity:0;
+}
+.card.live{border-color:rgba(119,206,191,.36)}
+.card.flash{box-shadow:0 0 0 1px rgba(119,206,191,.75),0 0 30px rgba(119,206,191,.3)}
+.card.del.live{border-color:rgba(225,29,72,.55)}
+.card.del.flash{box-shadow:0 0 0 1px rgba(225,29,72,.85),0 0 30px rgba(225,29,72,.32)}
+.card .h{position:absolute;top:0;right:0;left:0;height:var(--ch);display:flex;align-items:center;justify-content:space-between;padding:0 .85em;gap:.6em}
+.card .h .n{font-weight:700;font-size:var(--cf);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .h .c{font-weight:900;font-size:var(--cf);font-variant-numeric:tabular-nums;color:var(--aqua)}
+.card.del .h .c{color:var(--red)}
+.freed{position:fixed;z-index:4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.15em;background:rgba(6,11,23,.86);
+  border-radius:0 0 16px 16px;font-weight:900;font-size:var(--ff);color:var(--red);opacity:0;text-align:center;padding:0 .5em}
+.freed b{font-size:1.9em;line-height:1}.freed span{font-size:.6em;color:var(--ink);font-weight:700}
+
+/* פתיחה: קיר התמונות וכפתור אחד */
+.hero{position:fixed;inset:0;z-index:7;will-change:opacity,transform;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.hero .eyebrow{font-weight:400;color:var(--mute);font-size:clamp(14px,1.25vw,26px);letter-spacing:.02em}
+.hero h1{font-weight:900;font-size:clamp(44px,6.4vw,140px);line-height:1.02;margin-top:.15em;letter-spacing:-.015em}
+.hero h1 .g{display:inline-block;padding-bottom:.06em}
+.go{pointer-events:auto;margin-top:clamp(22px,2.6vw,56px);font:inherit;font-weight:900;font-size:clamp(18px,1.7vw,36px);color:#06101f;cursor:pointer;
+  border:0;border-radius:999px;padding:.85em 1.9em;background:linear-gradient(90deg,var(--aqua),var(--blue));
+  box-shadow:0 0 0 1px rgba(255,255,255,.22) inset,0 10px 40px rgba(119,206,191,.35),0 0 0 0 rgba(119,206,191,.45);animation:pulse 2.2s ease-out infinite}
+.go:hover{filter:brightness(1.08)}
+.go:focus-visible{outline:3px solid #fff;outline-offset:4px}
+@keyframes pulse{0%{box-shadow:0 0 0 1px rgba(255,255,255,.22) inset,0 10px 40px rgba(119,206,191,.35),0 0 0 0 rgba(119,206,191,.45)}
+  70%{box-shadow:0 0 0 1px rgba(255,255,255,.22) inset,0 10px 40px rgba(119,206,191,.35),0 0 0 26px rgba(119,206,191,0)}
+  100%{box-shadow:0 0 0 1px rgba(255,255,255,.22) inset,0 10px 40px rgba(119,206,191,.35),0 0 0 0 rgba(119,206,191,0)}}
+body.render .go{animation:none}
+
+.done{position:fixed;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4em;opacity:0;text-align:center;pointer-events:none}
+.done .check{width:var(--ck);height:var(--ck);border-radius:50%;background:linear-gradient(90deg,var(--aqua),var(--blue));display:grid;place-items:center;
+  font-size:calc(var(--ck)*.5);color:#06101f;font-weight:900;box-shadow:0 0 60px rgba(119,206,191,.45)}
+.done p{font-weight:900;font-size:calc(var(--ck)*.36);margin-top:.25em}
+.done small{color:var(--mute);font-size:calc(var(--ck)*.17);font-weight:400}
+.again{position:fixed;bottom:2.4vh;left:50%;transform:translateX(-50%);z-index:9;font:inherit;font-weight:700;font-size:clamp(13px,.95vw,18px);
+  color:var(--ink);background:rgba(13,22,44,.8);border:1px solid rgba(143,163,191,.3);border-radius:999px;padding:.6em 1.4em;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .4s}
+.again.on{opacity:1;pointer-events:auto}
+body.render .again{display:none}
+</style>
+</head>
+<body>
+<div class="ground"></div><div class="weight"></div><div class="rays"></div><div class="breath"></div><div class="grid"></div>
+<header id="hdr">
+  <div>
+    <div class="title">מסדר את <span class="g">הגלריה</span></div>
+    <div class="sub" id="sub"></div>
+  </div>
+  <div class="stats">
+    <div class="stat" id="s-scan"><b>0</b><span>נסרקו</span></div>
+    <div class="stat" id="s-alb"><b>0</b><span>אלבומים</span></div>
+    <div class="stat red" id="s-del"><b>0</b><span>למחיקה</span></div>
+    <div class="stat red" id="s-mb"><b>0</b><span>מקום שמתפנה</span></div>
+  </div>
+  <img class="logo" src="logo.png" alt="Brain">
+</header>
+<canvas id="cv"></canvas>
+<div class="vig" id="vig"></div>
+<div class="hero" id="hero">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="h1"></h1>
+  <button class="go" id="go" type="button">סדר לי את הגלריה</button>
+</div>
+<div class="done" id="done"><div class="check" id="check">✓</div><p>הגלריה מסודרת</p><small id="dsum"></small></div>
+<div class="freed" id="freed"><b id="freedmb"></b><span>מוכנים למחיקה</span></div>
+<button class="again" id="again" type="button">↻ שוב מההתחלה</button>
+<script src="data.js"></script>
+<script>
+/* הכול פונקציה טהורה של הזמן: t = מילישניות מאז הלחיצה (שלילי = מסך הפתיחה).
+   אותו קוד מנגן חי בדפדפן ומרנדר פריים-אחרי-פריים (?render=1, window.renderAt(ms)).
+   מהלך: קיר תמונות → נשאבות לגלקסיה סביב הליבה → הליבה בולעת כל תמונה, מבינה אותה ויורה אותה לאלבום. */
+const D = window.SORT_DATA, Q = new URLSearchParams(location.search);
+const SPEED = +(Q.get('speed') || 1), RENDER = !!Q.get('render');
+const sp = ms => ms / SPEED;
+const PRE = 1600;                      // רינדור: כמה זמן מסך הפתיחה לפני הלחיצה
+const GATHER_AT = sp(250), GATHER_SPREAD = sp(1100), GATHER = sp(1250);
+const SORT_AT = sp(2900), SORT_TOTAL = sp(11500), INTRO_N = 6, G0 = sp(640), TAU = 5;
+const IN = sp(360), FLY = sp(820);
+const EMERGE = sp(260), HOLD = sp(520), FLY_I = sp(700);
+const CHIP_GAP = sp(430), CHIP_LIFE = sp(640);
+const N = D.items.length, TS = D.tile;
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const atlas = new Image(); atlas.src = 'atlas.jpg';
+const logo = new Image(); logo.src = 'logo.png';
+/* ביצועים: כל מה שיקר מצויר פעם אחת מראש, ובכל פריים רק מעתיקים.
+   - שלוש רמות אטלס (160/64/32): קנבס לא בונה mipmaps, והקטנה של 160 ל-20 פיקסלים בכל פריים גם יקרה וגם מרצדת
+   - צל, זוהר ולוגו כספרייטים במקום shadowBlur ו-filter, שמחושבים מחדש לכל ציור
+   - תמונות שכבר נחתו מצוירות פעם אחת לשכבת בסיס, כך שבכל פריים מציירים רק את מה שזז */
+const LV = [];
+let shadowSpr, glowSpr, logoInk;
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function prepare() {
+  // גם הרמה הגדולה עוברת לקנבס: תמונת JPEG ענקית שהדפדפן "שכח" מפוענחת מחדש (כ-65ms) ברגע הראשון שצריך אותה
+  const big = mk(atlas.naturalWidth, atlas.naturalHeight); big.getContext('2d').drawImage(atlas, 0, 0);
+  LV.length = 0; LV.push({img: big, ts: TS});
+  let prev = big, pw = big.width, ph = big.height;
+  for (const ts of [64, 32]) {
+    const k = ts / TS, c = mk(Math.round(atlas.naturalWidth * k), Math.round(atlas.naturalHeight * k)), x = c.getContext('2d');
+    x.imageSmoothingQuality = 'high'; x.drawImage(prev, 0, 0, pw, ph, 0, 0, c.width, c.height);
+    LV.push({img: c, ts}); prev = c; pw = c.width; ph = c.height;
+  }
+  shadowSpr = mk(128, 128); { const x = shadowSpr.getContext('2d'); x.filter = 'blur(14px)'; x.fillStyle = 'rgba(0,0,0,.75)'; x.fillRect(32, 32, 64, 64); }
+  glowSpr = mk(512, 512); { const x = glowSpr.getContext('2d'), g = x.createRadialGradient(256, 256, 0, 256, 256, 256);
+    g.addColorStop(0, 'rgba(119,206,191,1)'); g.addColorStop(.12, 'rgba(119,206,191,.55)'); g.addColorStop(.4, 'rgba(124,156,240,.16)'); g.addColorStop(1, 'rgba(124,156,240,0)');
+    x.fillStyle = g; x.fillRect(0, 0, 512, 512); }
+  // חימום: כל טקסטורה עולה למאיץ הגרפי כבר במסך הפתיחה, ולא באמצע ההרצה (שם זה נראה כתקיעה)
+  for (const lv of LV) ctx.drawImage(lv.img, 0, 0, 1, 1, -4, -4, 1, 1);
+  ctx.drawImage(shadowSpr, -4, -4, 1, 1); ctx.drawImage(glowSpr, -4, -4, 1, 1);
+  if (logo.naturalWidth) { logoInk = mk(logo.naturalWidth, logo.naturalHeight); const x = logoInk.getContext('2d');
+    x.drawImage(logo, 0, 0); x.globalCompositeOperation = 'source-in'; x.fillStyle = '#06101f'; x.fillRect(0, 0, logoInk.width, logoInk.height);
+    ctx.drawImage(logoInk, -4, -4, 1, 1); }
+}
+const lvFor = s => s * DPR > 128 ? LV[0] : s * DPR > 56 ? LV[1] : LV[2];
+// כתיבה ל-DOM רק כשהערך באמת השתנה (אחרת הדפדפן מחשב סגנון ופריסה מחדש בכל פריים)
+const setS = (el, p, v) => { if (el['_' + p] !== v) { el['_' + p] = v; el.style[p] = v; } };
+const setT = (el, v) => { if (el._t !== v) { el._t = v; el.textContent = v; } };
+const setC = (el, c, on) => { if (el['_c' + c] !== on) { el['_c' + c] = on; el.classList.toggle(c, on); } };
+const fmt = n => n.toLocaleString('he-IL');
+const mbTxt = mb => mb >= 1000 ? (mb / 1000).toFixed(1) + 'GB' : Math.round(mb) + 'MB';
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const easeOut = x => 1 - Math.pow(1 - x, 3);
+const easeIn = x => x * x * x;
+const backOut = x => 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2);
+const hash = (k, s = 1) => { const x = Math.sin(k * 127.1 + s * 311.7) * 43758.5453; return x - Math.floor(x); };
+if (RENDER) document.body.classList.add('render');
+// טקסטים ותמונות הפתיחה ניתנים לשינוי מ-data.js (eyebrow, sub, intro), כך שאותו ממשק משרת כל גלריה
+// המחשה: displayTotal מציג גלריה גדולה יותר. כל אריח מייצג F תמונות, וכל המונים מוכפלים באותו יחס
+const F = (D.displayTotal || N) / N, NT = Math.round(N * F), sc = x => Math.round(x * F);
+document.getElementById('sub').textContent = D.sub || `${fmt(NT)} תמונות מהשנה האחרונה באייפון`;
+document.getElementById('eyebrow').textContent = D.eyebrow || 'הגלריה שלי באייפון';
+document.getElementById('h1').innerHTML = `${fmt(NT)} תמונות.<br><span class="g">אפס סדר.</span>`;
+
+const albumById = Object.fromEntries(D.albums.map(a => [a.id, a]));
+const tiles = D.items.map((it, k) => ({...it, k, album: albumById[it.a]}));
+
+// סדר המיון: קודם כמה תמונות "שמספרות את הסיפור" לאט, ואז המבול
+const INTRO_CATS = D.intro || ['trip:יוון', 'testimonial', 'receipt', 'dupes', 'food', 'work'];
+const intro = [];
+INTRO_CATS.forEach(c => {
+  const t = tiles.find(x => !x.s && !intro.includes(x) && (x.a === c || (c === 'trip:יוון' && x.a.startsWith('trip'))));
+  if (t) intro.push(t);
+});
+const rest = tiles.filter(t => !intro.includes(t)).sort((a, b) => hash(a.k, 3) - hash(b.k, 3));
+const order = intro.slice(0, INTRO_N).concat(rest);
+// מרווח בין שיגורים: מתחיל ב-G0 ודועך אקספוננציאלית עד קצב קבוע שממלא את SORT_TOTAL
+const GMIN = (SORT_TOTAL - G0 * TAU) / (N - TAU);
+let acc = SORT_AT;
+order.forEach((t, j) => {
+  t.j = j; t.intro = j < INTRO_N; t.launch = acc;
+  acc += GMIN + (G0 - GMIN) * Math.exp(-j / TAU);
+  // מסלול בדיסק: הפנימיות נבלעות ראשונות
+  t.rn = .2 + .8 * Math.sqrt((j + hash(j, 5) * 40) / (N + 40));
+  t.a0 = hash(j, 7) * 2 * Math.PI + t.rn * 2.4;   // דיסק מלא עם פיתול עדין, כמו טבעת סביב כוכב
+  t.w = .55 / Math.pow(t.rn, 1.15);              // רדיאנים לשנייה, פנימי מהיר יותר
+  t.gOff = (hash(j, 9) - .5) * .06;              // עובי הדיסק
+  t.absorb = t.launch + IN; t.hq = hash(t.k, 11);
+  t.land = t.absorb + (t.intro ? EMERGE + HOLD + FLY_I : FLY);
+});
+const byLaunch = [...order];
+D.albums.forEach(a => { a.tiles = []; a.mbCum = []; });
+byLaunch.forEach(t => { t.slotK = t.album.tiles.length; t.album.tiles.push(t); });
+D.albums.forEach(a => { let s = 0; a.mbCum = a.tiles.map(t => (s += t.mb)); a.lands = a.tiles.map(t => t.land); });
+const FINISH = Math.max(...order.map(t => t.land));
+const landOrder = [...order].sort((a, b) => a.land - b.land), landTimes = landOrder.map(t => t.land);
+const launches = byLaunch.map(t => t.launch), absorbs = byLaunch.map(t => t.absorb);
+const upTo = (arr, x) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; arr[m] <= x ? lo = m + 1 : hi = m; } return lo; };
+const CHIP_CATS = new Set(['testimonial', 'receipt', 'dupes', 'inspiration', 'trip']);
+const chips = []; let lastChip = -1e9;
+byLaunch.forEach(t => {
+  if (t.intro) { chips.push(t); lastChip = t.absorb + HOLD; return; }
+  const base = t.a.startsWith('trip') ? 'trip' : t.a;
+  if (t.absorb - lastChip >= CHIP_GAP && (CHIP_CATS.has(base) || (t.k * 7919) % 4 === 0)) { chips.push(t); lastChip = t.absorb; }
+});
+const chipAt = chips.map(c => c.absorb);
+
+let W, H, DPR, L = {}, base, baseCtx, baseN = 0;
+const BACK = [], FRONT = [], TOP = [];
+function layout() {
+  DPR = RENDER ? 1 : Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+  base = mk(W * DPR, H * DPR); baseCtx = base.getContext('2d'); baseCtx.setTransform(DPR, 0, 0, DPR, 0, 0); baseN = 0;
+  const hh = Math.round(H * .14); document.documentElement.style.setProperty('--hh', hh + 'px');
+  const top = hh, bot = H - H * .04, gap = W * .009, edge = W * .016;
+  const sideW = W * .258;
+  // מרכז: הגלקסיה והליבה
+  const cx = W / 2, cy = top + (bot - top) * .5;
+  const RX = Math.min((W - 2 * (edge + sideW)) * .5 - W * .012, (bot - top) * .95), RY = RX * .42;
+  L.c = {x: cx, y: cy, RX, RY, orb: RY * .36, gs: Math.max(14, RX * .074)};
+  // קיר הפתיחה: כל התמונות ממלאות את המסך כמו גלריה
+  const cols = Math.round(Math.sqrt(N * W / H)), rows = Math.ceil(N / cols), s = Math.max(W / cols, H / rows);
+  L.wall = {cols, s, x: (W - cols * s) / 2, y: (H - rows * s) / 2};
+  // אלבומים: ימין קודם (קוראים מימין), אלבום המחיקה אחרון בשמאל
+  const keep = D.albums.filter(a => a.kind === 'keep'), del = D.albums.filter(a => a.kind === 'del');
+  const half = Math.ceil(keep.length / 2);
+  const right = keep.slice(0, half), left = keep.slice(half).concat(del);
+  placeSide(right, W - edge - sideW, sideW, top, bot, gap, 2);
+  placeSide(left, edge, sideW, top, bot, gap, 2);
+  placeSlots();
+  D.albums.forEach((a, i) => { a.order = a.kind === 'del' ? 99 : (right.includes(a) ? i : i - half); });
+  const d = del[0];
+  if (d) {
+    const fr = document.getElementById('freed');
+    Object.assign(fr.style, {left: d.box.x + 'px', top: (d.box.y + d.ch) + 'px', width: d.box.w + 'px', height: (d.box.h - d.ch) + 'px'});
+    fr.style.setProperty('--ff', Math.max(16, Math.min(d.box.w * .085, 38)) + 'px');
+  }
+  const dn = document.getElementById('done'), ck = L.c.RY * .78;
+  Object.assign(dn.style, {left: (cx - RX) + 'px', top: (cy - RY * 1.4) + 'px', width: (RX * 2) + 'px', height: (RY * 2.8) + 'px'});
+  dn.style.setProperty('--ck', ck + 'px');
+}
+function placeSide(list, x0, w, top, bot, gap, colsN) {
+  colsN = list.length > 3 ? colsN : 1;
+  const cw = (w - gap * (colsN - 1)) / colsN;
+  const colsArr = Array.from({length: colsN}, () => ({items: [], w: 0}));
+  const wt = a => Math.max(a.n, 14) ** .62 + 3;
+  list.forEach(a => { const c = colsArr.reduce((m, c) => c.w < m.w ? c : m); c.items.push(a); c.w += wt(a); });
+  colsArr.forEach((c, ci) => {
+    let y = top; const avail = bot - top - gap * (c.items.length - 1);
+    c.items.forEach(a => { const h = avail * wt(a) / c.w; a.box = {x: x0 + (colsN - 1 - ci) * (cw + gap), y, w: cw, h}; y += h + gap; });
+  });
+  list.forEach(a => {
+    if (!a.el) {
+      a.el = document.createElement('div');
+      a.el.className = 'card' + (a.kind === 'del' ? ' del' : '');
+      a.el.innerHTML = `<div class="h"><span class="n"></span><span class="c">0</span></div>`;
+      a.el.querySelector('.n').textContent = a.name;
+      a.el.side = x0 > W / 2 ? 1 : -1;
+      document.body.appendChild(a.el);
+    }
+    const b = a.box, ch = a.ch = Math.max(36, Math.min(52, b.h * .22));
+    Object.assign(a.el.style, {left: b.x + 'px', top: b.y + 'px', width: b.w + 'px', height: b.h + 'px'});
+    a.el.style.setProperty('--ch', ch + 'px');
+    a.el.style.setProperty('--cf', Math.max(14, Math.min(ch * .52, 25, (b.w - 30) / (a.name.length * .58 + 2.6))) + 'px');
+    const iw = b.w - 18, ih = b.h - ch - 12; let s = Math.min(iw, ih);
+    while (s > 3 && Math.floor(iw / s) * Math.floor(ih / s) < a.n) s -= .5;
+    const c = Math.max(1, Math.floor(iw / s));
+    a.mosaic = {x: b.x + 9 + (iw - c * s), y: b.y + ch + 4, s, c};
+  });
+}
+// בלי הקצאות בתוך הפריים: כל אריח מחזיק אובייקט מצב אחד שמתעדכן במקום, ומיקום המשבצת מחושב פעם אחת בפריסה.
+const slot = t => t.sl;
+function placeSlots() {
+  for (const t of order) { const m = t.album.mosaic, col = t.slotK % m.c, row = Math.floor(t.slotK / m.c);
+    t.sl = {x: m.x + (m.c - 1 - col) * m.s, y: m.y + row * m.s, s: m.s}; t.st = t.st || {}; }
+}
+const Wp = {x: 0, y: 0, s: 0}, G = {x: 0, y: 0, s: 0, d: 0};
+function wallPos(t, clock) { const w = L.wall, col = t.k % w.cols, row = Math.floor(t.k / w.cols);
+  Wp.x = w.x + (w.cols - 1 - col) * w.s; Wp.y = w.y + row * w.s + Math.sin(clock / 900 + t.k * .37) * w.s * .03; Wp.s = w.s; return Wp; }
+// מיקום על הדיסק בזמן t: אליפסה מוטה, עומק לפי sin, קרוב = גדול ובהיר
+function gal(t, tm, shrink = 1, spin = 0) {
+  const c = L.c, th = t.a0 + t.w * tm / 1000 + spin, r = t.rn * shrink;
+  const d = Math.sin(th), sc = (.62 + .6 * (d + 1) / 2) * (1.15 - .35 * t.rn);
+  G.s = c.gs * sc; G.x = c.x + Math.cos(th) * r * c.RX - G.s / 2; G.y = c.y + d * r * c.RY + t.gOff * c.RY * 2 - G.s / 2; G.d = d;
+  return G;
+}
+function put(o, x, y, s, d, a, rot, lift, phase, insK = 0) {
+  o.x = x; o.y = y; o.s = s; o.d = d; o.a = a; o.rot = rot; o.lift = lift; o.phase = phase; o.insK = insK; return o;
+}
+const qb = (p0, q, p1, e) => (1 - e) * (1 - e) * p0 + 2 * (1 - e) * e * q + e * e * p1;
+
+// מצב כל אריח בזמן t, נכתב לתוך t.st: {x,y,s,d,a,rot,lift,phase,insK}
+function tileState(t, tm, clock) {
+  const o = t.st, g0 = GATHER_AT + t.gStart;
+  if (tm < g0) { const w = wallPos(t, clock); return put(o, w.x, w.y, w.s, 0, 1, 0, 0, 'wall'); }
+  if (tm < t.launch) {
+    const g = gal(t, tm);
+    if (tm < g0 + GATHER) {
+      const k = (tm - g0) / GATHER, e = ease(k), lift = Math.sin(Math.PI * k), gx = g.x, gy = g.y, gs = g.s, gd = g.d, w = wallPos(t, clock);
+      return put(o, lerp(w.x, gx, e), lerp(w.y, gy, e) - lift * H * .05, lerp(w.s, gs, e) + lift * gs * .6, gd * e, 1, (t.k % 2 ? 1 : -1) * lift * .3, 0, 'gather');
+    }
+    return put(o, g.x, g.y, g.s, g.d, .55 + .45 * (g.d + 1) / 2, 0, 0, 'gal');
+  }
+  if (tm < t.absorb) {
+    const k = (tm - t.launch) / IN, e = easeIn(k), g = gal(t, tm, 1 - e, k * 1.6);
+    return put(o, g.x, g.y, g.s * (1 - .55 * e), g.d, 1, 0, 0, 'in');
+  }
+  const c = L.c, b = t.sl;
+  if (t.intro) {
+    const ins = c.RY * 1.25, ix = c.x - ins / 2, iy = c.y - ins / 2, e1 = tm - t.absorb;
+    if (e1 < EMERGE) { const s = lerp(c.gs * .4, ins, backOut(clamp(e1 / EMERGE))); return put(o, c.x - s / 2, c.y - s / 2, s, 1, 1, 0, 0, 'inspect'); }
+    if (e1 < EMERGE + HOLD) return put(o, ix, iy, ins, 1, 1, 0, 0, 'inspect', (e1 - EMERGE) / HOLD);
+    const k = clamp((e1 - EMERGE - HOLD) / FLY_I);
+    if (k < 1) { const e = ease(k), lift = Math.sin(Math.PI * k), qx = (ix + b.x) / 2, qy = Math.min(iy, b.y) - H * .1;
+      return put(o, qb(ix, qx, b.x, e), qb(iy, qy, b.y, e), lerp(ins, b.s, easeOut(k)), 1, 1, (b.x > c.x ? 1 : -1) * lift * .14, lift, 'fly'); }
+    return put(o, b.x, b.y, b.s, 1, 1, 0, 0, 'slot');
+  }
+  const k = (tm - t.absorb) / FLY;
+  if (k < 1) {
+    const e = ease(k), lift = Math.sin(Math.PI * k), x0 = c.x - c.gs * .2, y0 = c.y - c.gs * .2;
+    const qx = (x0 + b.x) / 2, qy = Math.min(y0, b.y) - H * (.06 + .1 * t.hq);
+    return put(o, qb(x0, qx, b.x, e), qb(y0, qy, b.y, e), lerp(c.gs * .4, b.s, e) + lift * c.gs * 1.1, 1, 1, (b.x > c.x ? 1 : -1) * lift * .16, lift, 'fly');
+  }
+  return put(o, b.x, b.y, b.s, 1, 1, 0, 0, 'slot');
+}
+
+function blit(c, t, x, y, s) {
+  const lv = lvFor(s), ts = lv.ts;
+  c.drawImage(lv.img, (t.i % D.cols) * ts, Math.floor(t.i / D.cols) * ts, ts, ts, x, y, s, s);
+}
+function drawTile(t, st) {
+  ctx.globalAlpha = st.a;
+  if (st.rot || st.lift) {
+    const h = st.s / 2;
+    ctx.save(); ctx.translate(st.x + h, st.y + h); if (st.rot) ctx.rotate(st.rot);
+    if (st.lift > .1 && st.s > 22) { const q = st.s * .85; ctx.globalAlpha = st.a * st.lift; ctx.drawImage(shadowSpr, -q, -q + 7 * st.lift, q * 2, q * 2); ctx.globalAlpha = st.a; }
+    blit(ctx, t, -h, -h, st.s);
+    if (t.album.kind === 'del' && st.lift > .15) { ctx.strokeStyle = `rgba(225,29,72,${st.lift.toFixed(2)})`; ctx.lineWidth = 2; ctx.strokeRect(-h, -h, st.s, st.s); }
+    ctx.restore();
+  } else blit(ctx, t, st.x, st.y, st.s);
+  ctx.globalAlpha = 1;
+}
+// שכבת הבסיס: כל תמונה שנחתה מצוירת עליה פעם אחת. קפיצה אחורה בזמן (התחלה מחדש, סטילס) = ציור מחדש
+function syncBase(tm) {
+  const n = upTo(landTimes, tm);
+  if (n < baseN) { baseCtx.clearRect(0, 0, W, H); baseN = 0; }
+  for (let i = baseN; i < n; i++) { const t = landOrder[i], b = slot(t); blit(baseCtx, t, b.x + .5, b.y + .5, b.s - 1); }
+  baseN = n;
+}
+
+// הליבה: כדור אור עם טבעות מסתובבות, פועם בכל בליעה
+function drawOrb(tm, pulse, k) {
+  if (k <= 0) return;
+  const c = L.c, R = c.orb * k * (1 + .1 * pulse);
+  ctx.save();
+  const gr = R * (3.4 + pulse);
+  ctx.globalAlpha = .55 + .35 * pulse; ctx.drawImage(glowSpr, c.x - gr, c.y - gr, gr * 2, gr * 2); ctx.globalAlpha = 1;
+  const core = ctx.createRadialGradient(c.x - R * .3, c.y - R * .35, R * .1, c.x, c.y, R);
+  core.addColorStop(0, '#f4fffd'); core.addColorStop(.35, '#77cebf'); core.addColorStop(.8, '#3d63c4'); core.addColorStop(1, '#1d3a86');
+  ctx.fillStyle = core; ctx.beginPath(); ctx.arc(c.x, c.y, R, 0, 7); ctx.fill();
+  ctx.lineWidth = Math.max(1.5, R * .035);
+  for (let i = 0; i < 3; i++) {
+    const rr = R * (1.35 + i * .32), rot = tm / (1400 + i * 500) * (i % 2 ? -1 : 1) + i;
+    ctx.strokeStyle = `rgba(${i === 1 ? '124,156,240' : '119,206,191'},${.55 - i * .12})`;
+    ctx.beginPath(); ctx.ellipse(c.x, c.y, rr, rr * .36, -.18, rot, rot + Math.PI * (1.1 + .3 * i)); ctx.stroke();
+  }
+  if (logoInk) {
+    const lw = R * 1.25, lh = lw * logoInk.height / logoInk.width;
+    ctx.globalAlpha = .92; ctx.drawImage(logoInk, c.x - lw / 2, c.y - lh / 2, lw, lh);
+  }
+  ctx.restore();
+}
+
+function pill(x, y, label, target, del, fs) {
+  ctx.font = `700 ${fs}px Heebo, system-ui, sans-serif`; ctx.direction = 'rtl'; ctx.textBaseline = 'middle';
+  const arrow = '  ←  ', wl = ctx.measureText(label).width, wa = ctx.measureText(arrow).width, wt = ctx.measureText(target).width;
+  const padX = fs * .95, w = wl + wa + wt + padX * 2, h = fs * 2.15, x0 = x - w / 2;
+  ctx.fillStyle = 'rgba(6,11,23,.94)'; ctx.strokeStyle = del ? 'rgba(225,29,72,.8)' : 'rgba(119,206,191,.7)'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.roundRect(x0, y - h / 2, w, h, h / 2); ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.globalAlpha *= .22; ctx.lineWidth = 7; ctx.stroke(); ctx.restore();
+  ctx.textAlign = 'right'; let xr = x0 + w - padX;
+  ctx.fillStyle = '#eaf1f8'; ctx.fillText(label, xr, y); xr -= wl;
+  ctx.fillStyle = del ? '#ff5a7a' : '#77cebf'; ctx.fillText(arrow, xr, y); xr -= wa; ctx.fillText(target, xr, y);
+}
+const chipLabel = c => c.album.kind === 'del' ? (c.tag && /טשטוש|מטושטש/.test(c.tag) ? 'מטושטשת' : 'כפולה') : (c.tag || c.album.name);
+
+const $c = {}, $ = id => $c[id] || ($c[id] = document.getElementById(id));
+const statB = id => $c['b' + id] || ($c['b' + id] = document.querySelector(`#${id} b`));
+function draw(tm, clock) {
+  if (!L.c) return;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clearRect(0, 0, W, H);
+  const c = L.c;
+  // פתיחה: כפתור וכותרת נעלמים, הכרטיסים נכנסים מהצדדים
+  const heroK = tm < 0 ? 1 : 1 - clamp(tm / sp(380));
+  setS($('hero'), 'opacity', heroK.toFixed(3)); setS($('hero'), 'transform', `scale(${(1 + (1 - heroK) * .08).toFixed(4)})`);
+  setS($('hero'), 'visibility', heroK > 0 ? 'visible' : 'hidden');
+  if (tm < 0 && RENDER) { const pk = clamp((tm + 260) / 200); setS($('go'), 'transform', `scale(${(1 - .06 * Math.sin(Math.PI * pk)).toFixed(4)})`); }
+  setS($('hdr'), 'opacity', clamp((tm - sp(500)) / sp(500)).toFixed(3));
+  for (const a of D.albums) {
+    const p = easeOut(clamp((tm - sp(900) - Math.abs(a.order) * sp(70)) / sp(550)));
+    setS(a.el, 'opacity', (p ? (a.shown > 0 ? 1 : .55) * p : .002).toFixed(3));
+    setS(a.el, 'transform', p >= 1 ? 'none' : `translateX(${((1 - p) * a.el.side * 60).toFixed(1)}px)`);
+  }
+  // עמעום הקיר מאחורי טקסט הפתיחה
+  const pulseN = tm > 0 ? upTo(absorbs, tm) - upTo(absorbs, tm - sp(160)) : 0;
+  const pulse = clamp(pulseN / 4);
+  const orbK = tm < sp(300) ? 0 : (tm < FINISH ? backOut(clamp((tm - sp(300)) / sp(700))) : 1 - easeIn(clamp((tm - FINISH) / sp(450))));
+  // שלוש שכבות: אחורי הדיסק, הליבה, ומה שלפניה ובתעופה
+  syncBase(tm);
+  ctx.drawImage(base, 0, 0, W, H);
+  BACK.length = FRONT.length = TOP.length = 0;
+  for (const t of order) {
+    if (tm >= t.land) continue;
+    const st = tileState(t, tm, clock);
+    if (st.phase === 'inspect' || st.phase === 'fly') TOP.push(t);
+    else if (st.phase === 'in' || (st.phase === 'gal' && st.d < 0)) BACK.push(t);
+    else FRONT.push(t);
+  }
+  const ringK = clamp((tm - sp(900)) / sp(900)) * (tm < FINISH ? 1 : 1 - clamp((tm - FINISH) / sp(500)));
+  if (ringK > 0) {
+    ctx.save(); ctx.lineWidth = 1.2;
+    for (let i = 1; i <= 4; i++) {
+      ctx.strokeStyle = `rgba(119,206,191,${.10 * ringK * (1.2 - i * .2)})`;
+      ctx.beginPath(); ctx.ellipse(c.x, c.y, c.RX * i * .27, c.RY * i * .27, 0, 0, 7); ctx.stroke();
+    }
+    ctx.globalAlpha = .28 * ringK; ctx.drawImage(glowSpr, c.x - c.RX * 1.2, c.y - c.RY * 1.9, c.RX * 2.4, c.RY * 3.8); ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+  for (const t of BACK) drawTile(t, t.st);
+  drawOrb(tm, pulse, orbK);
+  for (const t of FRONT) drawTile(t, t.st);
+  // ויניטה על הקיר בפתיחה כדי שהכותרת תיקרא (שכבת DOM: המאיץ הגרפי מעמעם אותה בלי לצייר מחדש)
+  const v = tm < 0 ? 1 : 1 - clamp(tm / sp(600));
+  setS($('vig'), 'opacity', v.toFixed(3)); setS($('vig'), 'visibility', v > 0 ? 'visible' : 'hidden');
+  for (const t of TOP) { const st = t.st;
+    if (st.phase === 'inspect') {   // הליבה "מסתכלת" על התמונה: מסגרת זוהרת וקרן סריקה
+      const gr = st.s * 1.25; ctx.globalAlpha = .45; ctx.drawImage(glowSpr, st.x + st.s / 2 - gr, st.y + st.s / 2 - gr, gr * 2, gr * 2); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#0b1328'; ctx.fillRect(st.x - 6, st.y - 6, st.s + 12, st.s + 12);
+      drawTile(t, st);
+      const del = t.album.kind === 'del';
+      ctx.strokeStyle = del ? '#ff5a7a' : '#77cebf'; ctx.lineWidth = 3; ctx.strokeRect(st.x - 6, st.y - 6, st.s + 12, st.s + 12);
+      if (st.insK > 0 && st.insK < 1) {
+        const y = st.y + st.s * ease(st.insK), gr = ctx.createLinearGradient(0, y - st.s * .25, 0, y);
+        gr.addColorStop(0, 'rgba(119,206,191,0)'); gr.addColorStop(1, 'rgba(119,206,191,.35)');
+        ctx.fillStyle = gr; ctx.fillRect(st.x, y - st.s * .25, st.s, st.s * .25);
+        ctx.fillStyle = 'rgba(119,206,191,.35)'; ctx.fillRect(st.x - 6, y - 5, st.s + 12, 10);
+        ctx.fillStyle = '#c9fff6'; ctx.fillRect(st.x - 6, y - 1.5, st.s + 12, 3);
+      }
+    } else drawTile(t, st);
+  }
+  // תגית: מה הליבה זיהתה ולאן זה הולך
+  const ci = upTo(chipAt, tm) - 1;
+  if (ci >= 0) {
+    const ch = chips[ci], life = ch.intro ? EMERGE + HOLD + sp(250) : CHIP_LIFE, age = tm - ch.absorb;
+    if (age < life) {
+      const al = clamp(age / 110) * clamp((life - age) / 180), sc = .7 + .3 * backOut(clamp(age / 220));
+      const y = ch.intro ? c.y + c.RY * .62 + c.RY * .22 : c.y + c.RY * 1.08, fs = Math.max(15, c.RX * (ch.intro ? .052 : .044));
+      ctx.save(); ctx.globalAlpha = al; ctx.translate(c.x, y); ctx.scale(sc, sc);
+      pill(0, 0, chipLabel(ch), ch.album.name, ch.album.kind === 'del', fs); ctx.restore();
+    }
+  }
+  // כרטיסים ומונים
+  let albums = 0, delN = 0, mb = 0;
+  for (const a of D.albums) {
+    const n = upTo(a.lands, tm), last = n ? a.lands[n - 1] : -1e9;
+    if (a.shown !== n) { (a.cEl ||= a.el.querySelector('.c')).textContent = fmt(sc(n)); a.shown = n; }
+    setC(a.el, 'live', n > 0); setC(a.el, 'flash', n > 0 && tm - last < 180);
+    if (a.kind === 'keep' && n) albums++;
+    if (a.kind === 'del') { delN += n; mb += n ? a.mbCum[n - 1] : 0; }
+  }
+  setT(statB('s-scan'), fmt(sc(tm > 0 ? upTo(absorbs, tm) : 0))); setT(statB('s-alb'), fmt(albums));
+  setT(statB('s-del'), fmt(sc(delN))); setT(statB('s-mb'), mbTxt(mb * F));
+  // סיום: הליבה מתכווצת לוי, המספרים קופצים, האלבום האדום מראה כמה מקום מתפנה
+  const f = tm - FINISH;
+  setS($('done'), 'opacity', clamp((f - sp(250)) / sp(500)).toFixed(3));
+  setS($('check'), 'transform', `scale(${(.3 + .7 * backOut(clamp((f - sp(250)) / sp(650)))).toFixed(4)})`);
+  setT($('dsum'), `${fmt(NT)} תמונות · ${albums} אלבומים · ${mbTxt(mb * F)} מתפנים`);
+  setT($('freedmb'), mbTxt(mb * F));
+  setS($('freed'), 'opacity', clamp((f - sp(500)) / sp(600)).toFixed(3));
+  ['s-alb', 's-del', 's-mb'].forEach((id, k) => {
+    setS($(id), 'transform', `scale(${(1 + .2 * Math.sin(Math.PI * clamp((f - sp(300) - k * sp(220)) / sp(500)))).toFixed(4)})`);
+  });
+  if (!RENDER) $('again').classList.toggle('on', f > sp(1800));
+}
+
+// מתי כל אריח עוזב את הקיר: גל שמתפשט מהמרכז החוצה
+function setGather() {
+  const w = L.wall, mx = W / 2, my = H / 2, maxD = Math.hypot(W / 2, H / 2);
+  for (const t of order) {
+    const p = wallPos(t, 0), dd = Math.hypot(p.x + w.s / 2 - mx, p.y + w.s / 2 - my) / maxD;
+    t.gStart = (dd * .85 + hash(t.k, 13) * .15) * GATHER_SPREAD;
+  }
+}
+
+// ניגון חי
+let T0 = null; const C0 = performance.now();
+function loop(now) { requestAnimationFrame(loop); draw(T0 === null ? -1 : now - T0, now - C0); }
+function start() { if (T0 === null) T0 = performance.now(); }
+function reset() { T0 = null; D.albums.forEach(a => a.shown = -1); }
+$('go').addEventListener('click', start);
+$('again').addEventListener('click', reset);
+addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); T0 === null ? start() : null; }
+  if (e.key === 'r' || e.key === 'R' || e.key === 'ר') reset();
+});
+let rz; addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { layout(); setGather(); }, 120); });
+window.TOTAL_MS = PRE + FINISH + sp(3200);
+Promise.all([document.fonts.ready, atlas.decode(), logo.decode().catch(() => {})]).then(() => {
+  prepare(); layout(); setGather();
+  if (RENDER) { window.renderAt = ms => draw(ms - PRE, ms); draw(-PRE, 0); window.__ready = true; return; }
+  requestAnimationFrame(loop);
+  if (Q.get('auto')) setTimeout(start, +Q.get('auto') || 800);
+});
+</script>
+</body>
+</html>
